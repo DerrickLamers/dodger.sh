@@ -1,6 +1,6 @@
 #!/bin/bash
 
-### VARIABLES/CONSTANTS ###
+#### VARIABLES/CONSTANTS ####
 
 lane[0]="___@@@@@@@@@@@@@@@"
 lane[1]="@@@___@@@@@@@@@@@@"
