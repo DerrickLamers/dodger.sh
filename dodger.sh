@@ -5,9 +5,12 @@
 
 #### VARIABLES/CONSTANTS ####
 
+
+gameInProgress=true
+
 #Keep track of time
-oldTime=$((`date +%s` % 10))
-newTime=$((`date +%s` % 10))
+oldTime=$((`date +%s` % 15))
+newTime=$((`date +%s` % 15))
 
 lane[0]="___@@@@@@@@@@@@@@@"
 lane[1]="@@@___@@@@@@@@@@@@"
@@ -16,15 +19,17 @@ lane[3]="@@@@@@@@@___@@@@@@"
 lane[4]="@@@@@@@@@@@@___@@@"
 lane[5]="@@@@@@@@@@@@@@@___"
 
-laneState="543210" # 6 Lanes on the screen at a time
+laneState="333333" # 6 Lanes on the screen at a time
 		   # Each digit represents which type of lane is in that position.
+exitedLane=-1      # Start at -1 bc it's invalid
 
-person[0]=".&............."
-person[1]="...&..........."
-person[2]=".....&........."
-person[3]=".......&......."
-person[4]="..........&...."
-person[5]=".............&."
+
+person[0]=".&................"
+person[1]="....&............."
+person[2]=".......&.........."
+person[3]="..........&......."
+person[4]=".............&...."
+person[5]="................&."
 
 playerState=3    # 0-5 possible player locations
 
@@ -47,6 +52,7 @@ printLanes() {
 # Add newest lane to the front of laneState
 # Remove the oldest lane from laneState
 rotateLanes() {
+	exitedLane=${laneState:5:1}
 	next="$((RANDOM % 6))"
 	concat="$next$laneState"
 	laneState="${concat:0:6}"
@@ -54,7 +60,9 @@ rotateLanes() {
 
 # Print the player in whichever location playerState says she's at.
 printPlayer() {
-	echo "${person[playerState]}"
+	clear # clear the board
+	printLanes # immediately put the board back
+	echo "${person[playerState]}" # print the new player
 }
 
 
@@ -73,7 +81,7 @@ right() {
 	then
 		$((playerState++))
 	else
-		return
+		playerState=0
 	fi
 
 }
@@ -83,7 +91,7 @@ left() {
 	then
 		$((playerState--))
 	else
-		return
+		playerState=5
 	fi
 }
 
@@ -93,7 +101,7 @@ laneLoop() {
 }
 
 readInput() {
-	read -s -n 1 -t 1 key #TODO this can't have the 1 sec delay
+	read -r -s -n 1 -t 1 key #TODO this can't have the 1 sec delay
 	case "$key" in
 		'q') echo "-1";;
 		'w') echo "1";;
@@ -101,13 +109,32 @@ readInput() {
 	esac
 }
 
+checkGameOver() {
+	echo "$playerState"
+	echo "$exitedLane"
+
+	if ! [ $exitedLane -eq $playerState ]
+	then
+		gameInProgress=false
+	fi
+}
+
 
 ###### MAIN ######
+clear
+echo "----------------------"
+echo "| Welcome to dodger  |"
+echo "|                    |"
+echo "| Left: Q            |"
+echo "| Right: W           |"
+echo "----------------------"
+sleep 2
 
-while true; do
+while $gameInProgress; do
 
 # User's response
 response="$(readInput)"
+
 
 #If user pressed a key, process it
 if  ! [  "$response" -eq 0 ]; 
@@ -115,14 +142,20 @@ if  ! [  "$response" -eq 0 ];
             movePlayer $response
         fi
 
-newTime=$((`date +%s` % 10))
+newTime=$((`date +%s` % 15))
 
-# Things you wanna do every second
 if [ "$newTime" != "$oldTime" ]; then
 	oldTime=$newTime
 	laneLoop
+	checkGameOver
 fi
 
 printPlayer
 
 done
+
+## Game is over at this point
+clear
+echo "GAME OVER!"
+
+
