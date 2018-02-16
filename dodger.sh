@@ -26,7 +26,7 @@ person[3]=".......&......."
 person[4]="..........&...."
 person[5]=".............&."
 
-playerState=3    # 1 of 6 possible player locations
+playerState=3    # 0-5 possible player locations
 
 # displays all the lanes
 printLanes() {
@@ -54,31 +54,38 @@ rotateLanes() {
 
 # Print the player in whichever location playerState says she's at.
 printPlayer() {
-	echo ${person[playerState]}
-
+	echo "${person[playerState]}"
 }
 
 
-left() {
-	echo "LEFT"
-#	if ["$playerState" -le 0 ]
-#	then
-#		return
-#	else
-#		$((playerState - 1))
-#	fi
+movePlayer() {
+
+	if [ $1 -gt 0 ]
+	then
+		right
+        else
+		left
+	fi
 }
 
 right() {
-	echo "RIGHT"
-#	if ["$playerState" -ge 5]
-#	then
-#		return
-#	else
-#		$((playerState + 1))
-#	fi
+	if ! [ $playerState -ge 5 ]
+	then
+		$((playerState++))
+	else
+		return
+	fi
+
 }
 
+left() {
+	if ! [ $playerState -le 0 ]
+	then
+		$((playerState--))
+	else
+		return
+	fi
+}
 
 laneLoop() {
 	printLanes
@@ -88,17 +95,25 @@ laneLoop() {
 readInput() {
 	read -s -n 1 -t 1 key #TODO this can't have the 1 sec delay
 	case "$key" in
-		'q') left;;
-		'w') right;;
+		'q') echo "-1";;
+		'w') echo "1";;
+		*) echo "0";;
 	esac
 }
+
 
 ###### MAIN ######
 
 while true; do
 
-readInput
-printPlayer
+# User's response
+response="$(readInput)"
+
+#If user pressed a key, process it
+if  ! [  "$response" -eq 0 ]; 
+        then
+            movePlayer $response
+        fi
 
 newTime=$((`date +%s` % 10))
 
@@ -107,5 +122,7 @@ if [ "$newTime" != "$oldTime" ]; then
 	oldTime=$newTime
 	laneLoop
 fi
+
+printPlayer
 
 done
